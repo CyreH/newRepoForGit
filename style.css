@@ -1,0 +1,19 @@
+body {
+    font-family: 'Verdana', sans-serif;
+    text-align: center;
+}
+
+table {
+    border: 1px solid black;
+    border-collapse: collapse;
+}
+
+th {
+    padding: 5px;
+    border: 1px solid black;
+}
+
+td {
+    padding: 5px;
+    border: 1px solid black;
+}

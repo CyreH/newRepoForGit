@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Report</title>
+    <link rel="stylesheet" href="C:\Users\artur\PycharmProjects\pythonProject\style.css">
+</head>
+<body>
+<h1>Аналитика по зарплатам и городам для профессии {{ prof }}</h1>
+<img src="C:\Users\artur\PycharmProjects\pythonProject\graph.png" width="900" alt="graph">
+<h2>Статистика по годам</h2>
+<table>
+    <thead>
+    <tr>
+        {% for item in table1Headers %}
+        <th>{{ item }}</th>
+        {% endfor %}
+    </tr>
+    </thead>
+    {% for item in table1Data %}
+    <tr>
+        {% for subitem in item %}
+        <td>{{ subitem }}</td>
+        {% endfor %}
+    </tr>
+    {% endfor %}
+</table>
+<h2>Статистика по городам</h2>
+<table style="float: left; width: 47.5%; margin-left: 1.5%">
+    <thead>
+    <tr>
+        {% for item in table2Headers %}
+        <th>{{ item }}</th>
+        {% endfor %}
+    </tr>
+    </thead>
+    {% for item in table2Data %}
+    <tr>
+        {% for subitem in item %}
+        <td>{{ subitem }}</td>
+        {% endfor %}
+    </tr>
+    {% endfor %}
+</table>
+<table style="float: right; width: 47.5%; margin-right: 1.5%">
+    <thead>
+    <tr>
+        {% for item in table3Headers %}
+        <th>{{ item }}</th>
+        {% endfor %}
+    </tr>
+    </thead>
+    {% for item in table3Data %}
+    <tr>
+        {% for subitem in item %}
+        <td>{{ subitem }}</td>
+        {% endfor %}
+    </tr>
+    {% endfor %}
+</table>
+</body>
+</html>
