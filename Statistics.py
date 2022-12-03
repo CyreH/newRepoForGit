@@ -9,6 +9,8 @@ import prettytable
 from prettytable import PrettyTable
 import re
 
+testStr = 'Ветка develop'
+
 tax = {
     "True": "Без вычета налогов",
     "False": "С вычетом налогов"
