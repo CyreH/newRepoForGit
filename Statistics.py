@@ -54,6 +54,15 @@ currency_to_rub = {
 
 
 def sort_exp(vac):
+    """Корректрный параметр сортировки для опыта работы
+
+    Args:
+        vac (Vacancy): Вакансия для сортировки
+
+    Returns:
+         Параметр сортировки
+    """
+
     s = re.findall(r'\d*\.\d+|\d+', vac.experience_id)
     return 0 if len(s) == 0 else int(s[0])
 
@@ -73,7 +82,8 @@ functions = {
     'Название': lambda vac, val: vac.name == val,
     'Опыт работы': lambda vac, val: vac.experience_id == val,
     'Описание': lambda vac, val: vac.description == val,
-    'Дата публикации вакансии': lambda vac, val: f'{vac.published_at[8:10]}.{vac.published_at[5:7]}.{vac.published_at[:4]}' == val,
+    'Дата публикации вакансии': lambda vac,
+                                       val: f'{vac.published_at[8:10]}.{vac.published_at[5:7]}.{vac.published_at[:4]}' == val,
     'Премиум-вакансия': lambda vac, val: vac.premium == val,
     'Название региона': lambda vac, val: vac.area_name == val,
     'Компания': lambda vac, val: vac.employer_name == val,
@@ -84,7 +94,31 @@ functions = {
 
 
 class Vacancy:
+    """Класс для представления вакансии.
+
+    Attributes:
+        name (str): Название вакансии
+        salary_from (int): Нижняя граница вилки оклада
+        salary_to (int): Верхняя граница вилки оклада
+        salary_currency (int): Валюта оклада
+        area_name (str): Название региона
+        published_at (str): Дата публикации
+        year (str): Год публикации
+        salary (float): Средняя зарплата в рублях
+        employer_name (str): Название компании
+        description (str): Описание вакансии
+        key_skills (list): Навыки
+        experience_id (str): Требуемый опыт
+        premium (bool): Значение премиум вакансии
+        salary_gross (bool): Значение вычета налогов
+    """
+
     def __init__(self, vac):
+        """Инициализирует объект Vacancy
+
+        Args:
+            vac (dict):  Словарик одной вакансии
+        """
         self.name = vac['name']
         self.salary_from = vac['salary_from']
         self.salary_to = vac['salary_to']
@@ -102,18 +136,47 @@ class Vacancy:
             self.salary_gross = bools[vac['salary_gross']]
 
     def make_salary(self):
+        """Конвертирует значения зарпалаты в требуемый формат
+
+        Returns:
+            string: Средняя зарплата
+        """
         sal_from = '{0:,}'.format(int(float(self.salary_from))).replace(',', ' ')
         sal_to = '{0:,}'.format(int(float(self.salary_to))).replace(',', ' ')
         return f'{sal_from} - {sal_to} ({self.salary_currency}) ({self.salary_gross})'
 
     def __str__(self):
+        """Конвертирует значения класса в список, форматирует параметры для навыков, зарплаты и навыков
+
+        Returns:
+            list: Значения объектов Vacancy в списке
+        """
         return [self.name, self.description, '\n'.join(self.key_skills), self.experience_id, self.premium,
                 self.employer_name, self.make_salary(), self.area_name,
                 f'{self.published_at[8:10]}.{self.published_at[5:7]}.{self.published_at[:4]}']
 
 
 class DataSet:
+    """Класс для подсчётов данных
+
+    Attributes:
+        file_name (str): Название файла
+        vacancies_objects (list): Список вакансий
+        vac_amount (int): Количество вакансий
+        sal_by_years (dict): Зарплата по годам
+        sal_by_years_for_prof (dict): Зарплата по годам для конкретной профессии
+        sal_by_city (dict): Зарплата по городам
+        amount_by_years (dict): Количество вакансий по годам
+        amount_prof_by_years (dict): Количество вакансий по годам для конкретной профессии
+        amount_by_city (dict): Количество вакансий по городам
+    """
+
     def __init__(self, f_name):
+        """Инициализирует объект DataSet
+
+        Args:
+            f_name (str): Название файла
+        """
         self.file_name = f_name
         self.vacancies_objects = [Vacancy(obj) for obj in self.CSV_parser(self.file_name)]
         self.vac_amount = len(self.vacancies_objects)
@@ -126,6 +189,14 @@ class DataSet:
 
     @staticmethod
     def strRefactor(str):
+        """Форматируют строку, убирая HTML теги и затирая лишнии пробелы
+
+        Args:
+            str: Строка для форматирования
+
+        Returns:
+            str: Готовая строка
+        """
         str = re.sub(r"<[^>]*>", '', str)
         str = str.replace('\n', '_')
         str = ' '.join(str.split())
@@ -133,6 +204,15 @@ class DataSet:
 
     @staticmethod
     def CSV_parser(csv_file):
+        """Парсер для csv файлов
+
+        Args:
+            csv_file: csv файл
+
+        Returns:
+            vacancies (list): Список словарей вакансий, где первые ключи - это названия параметров(название, опыт),
+             а значения - это соответсвующие значения для параметров
+        """
         file = open(csv_file, encoding='utf-8-sig')
         csv_reader = csv.reader(file)
         titles = next(csv_reader)
@@ -142,10 +222,22 @@ class DataSet:
 
     @staticmethod
     def year_counter(sal, amount):
+        """Подсчитывает среднию зарпалту за год(делит зарплату на количество вакансий в году)
+
+        Args:
+            sal (dict): Словарь зарплат
+            amount (dict): Словарь количества зарплат
+        """
         for key in sal:
             sal[key] = int(sal[key] / amount[key]) if amount[key] != 0 else 0
 
     def city_counter(self, sal, amount):
+        """Подсчитывает среднию зарпалту по городам(делит зарплату на количество вакансий в городе)
+
+        Args:
+            sal (dict): Словарь зарплат
+            amount (dict): Словарь количества зарплат
+        """
         lst = []
         for key in sal:
             sal[key] = int(sal[key] / amount[key]) if amount[key] != 0 else 0
@@ -157,6 +249,11 @@ class DataSet:
             del amount[key]
 
     def make(self, prof_name):
+        """Заполняет и сортирует списки зарплат для статистики по годам и городам
+
+        Args:
+            prof_name (str): Название профессии для статистики
+        """
         for vac in self.vacancies_objects:
             city = vac.area_name
             year = int(vac.year)
@@ -186,7 +283,25 @@ class DataSet:
 
 
 class Table:
+    """Класс для формирования таблицы со статистикой
+
+    Attributes:
+        f_name (str): Название файла
+        filter (str): Параметр фильтрации
+        sort_type (str): Параметр сортировки
+        is_rev_sort (str): Обратный порядок сортировки (Да / Нет)
+        boarders (str): Диапазон вывода
+        need_titles (str): Требуемые столбцы
+        vacancies (DataSet): объект типа DataSet
+        titles (list): Список названий
+    """
+
     def __init__(self, f_name):
+        """Инициализирует объект Table
+
+        Args:
+            f_name (str): Название файла
+        """
         self.f_name = f_name
         self.filter = input('Введите параметр фильтрации: ')
         self.sort_type = input('Введите параметр сортировки: ')
@@ -205,6 +320,15 @@ class Table:
 
     @staticmethod
     def param_fixer(p, type):
+        """Служит для проверки корректности ввода данных пользователем
+
+        Args:
+            p (str): Ввод пользователя
+            type (str): Параметр проверки
+
+        Returns:
+            p (str): Ввод пользователя после проверки корректности
+        """
         if type == 'param':
             if not p:
                 return 'nothing'
@@ -228,11 +352,24 @@ class Table:
         return p
 
     def get_filtered(self, vac):
+        """Производит фильтрацию вакансии
+
+        Args:
+            vac (Vacancy): Вакансия
+
+        Returns:
+            vac (Vacancy): Отфильтрованная вакансия
+        """
         if self.filter == 'nothing':
             return vac
         return functions[self.filter[0]](vac, self.filter[1])
 
     def sort_vac(self):
+        """Производит сортировку вакансий
+
+        Returns:
+            vacancies_objects : Отсторитрованные вакансии
+        """
         if self.sort_type == 'nothing':
             return self.vacancies.vacancies_objects
         is_reverse = True if self.is_rev_sort == 'Да' else False
@@ -240,6 +377,7 @@ class Table:
         return self.vacancies.vacancies_objects
 
     def print_table(self):
+        """Печатает таблицу со статистикой"""
         table = PrettyTable()
         titles = self.titles.copy()
         titles.insert(0, '№')
@@ -275,7 +413,24 @@ class Table:
 
 
 class Report:
+    """Класс для генерации отчётов
+
+    Attributes:
+        f_name (str): Название файла
+        prof_name (str): Название профессии
+        data_set (DataSet): Данные
+        workbook : WB для работы с excel
+        years (list): Года с собранных данных
+        fig, ax : Для генерации графиков
+    """
+
     def __init__(self, f_name, prof_name):
+        """Инициализирует объект Report
+
+        Args:
+            f_name (str): Название файла
+            prof_name (str): Название профессии
+        """
         self.f_name = f_name
         self.prof_name = prof_name
         self.data_set = DataSet(self.f_name)
@@ -285,6 +440,7 @@ class Report:
         self.fig, self.ax = plt.subplots(nrows=2, ncols=2)
 
     def print_data(self):
+        """Выводит данны по годам и городам в консоль"""
         print('Динамика уровня зарплат по годам:', self.data_set.sal_by_years)
         print('Динамика количества вакансий по годам:', self.data_set.amount_by_years)
         print('Динамика уровня зарплат по годам для выбранной профессии:', self.data_set.sal_by_years_for_prof)
@@ -294,6 +450,7 @@ class Report:
         print('Доля вакансий по городам (в порядке убывания):', self.data_set.amount_by_city)
 
     def generate_pdf(self):
+        """Генерирует pdf файл"""
         headers1, headers2, headers3, t1_data, t2_data, t3_data = self.make_data()
         env = Environment(loader=FileSystemLoader('.'))
         template = env.get_template("main.html")
@@ -307,6 +464,7 @@ class Report:
         pdfkit.from_string(pdf_template, 'report.pdf', configuration=config, options=options)
 
     def generate_image(self):
+        """Генерирует png файл"""
         labels = self.years
         sal = [x for x in self.data_set.sal_by_years.values()]
         job_sal = [x for x in self.data_set.sal_by_years_for_prof.values()]
@@ -353,6 +511,7 @@ class Report:
         self.fig.savefig('graph.png')
 
     def generate_excel(self):
+        """Генерирует excel файл"""
         ws1 = self.workbook.active
         ws1.title = 'Статистика по годам'
         ws2 = self.workbook.create_sheet('Статистика по городам')
@@ -404,6 +563,7 @@ class Report:
         self.workbook.save('rep.xlsx')
 
     def make_data(self):
+        """Создает данные для создания pdf файла и связи с HTML(при помози jinja2)"""
         headers1 = ['Год', 'Средняя зарплата', f'Средняя зарплата - {self.prof_name}', 'Количество вакансий',
                     f'Количество вакансий - {self.prof_name}']
         headers2 = ['Город', 'Уровень зарплат']
@@ -426,12 +586,25 @@ class Report:
 
     @staticmethod
     def make_transfer(str):
+        """Служит для корректного переноса строк
+
+        Args:
+            str: Строка для переноса
+
+        Returns:
+            str: Строка включающая в себя /n
+        """
         str = str.replace('-', '-\n')
         str = str.replace(' ', '\n')
         return str
 
     @staticmethod
     def correct_rows(ws):
+        """Служит для коррекции ширины столбцов для excel таблицы
+
+        Args:
+            ws: Рабочий лист в excel
+        """
         dims = {}
         for row in ws.rows:
             for cell in row:
@@ -442,13 +615,31 @@ class Report:
 
     @staticmethod
     def create_values(val, cell, letter):
+        """Служит для заполнения значений в excel
+
+        Args:
+            val: Значения
+            cell: рабочий лист
+            letter (str): бувка клетки (A1)
+        """
         for i, year in enumerate(val, start=2):
             n = f'{letter}{i}'
             cell[n] = year
 
 
 class Input:
+    """Класс для ввода данных
+
+    Attributes:
+        request (str): Запрос на вывод данных
+        f_name (str): Название файла
+        prof_name (str): Название профессии
+        report (Report): объект класса Report
+        table (Table): объект класса Table
+    """
+
     def __init__(self):
+        """Инициализирует объект Input, проверяет какую информацию будет выводить программа"""
         self.request = input('Вывести вакансии или статистику?')
         # self.f_name = input('Введите название файла: ')
         self.f_name = 'vacancies_big.csv'
